@@ -6,11 +6,11 @@ The goal of this project is to develop an AI-powered financial summarization and
 
 ## Features
 - **Financial Data Extraction**: Extracts key metrics from balance sheets, P&L statements, and cash flow reports.
-- **AI-Powered Summarization**: Uses Transformer-based NLP models (T5, GPT-4) to summarize financial statements.
+- **AI-Powered Summarization**: Uses Transformer-based NLP models (GEMINI) to summarize financial statements.
 - **Competitor Benchmarking**: Compares financial KPIs across competitors using AI-driven models.
-- **Sentiment Analysis**: Analyzes earnings reports using FinBERT to detect positive or negative sentiment.
-- **Interactive Dashboard**: Built with Streamlit and D3.js for intuitive data visualization.
-- **Export Functionality**: Generates board-ready reports in PDF and PowerPoint formats.
+- **Sentiment Analysis**: Analyzes earnings reports using ensemble approach to detect positive or negative sentiment.
+- **Interactive Dashboard**: Built with Streamlit for intuitive data visualization.
+
 
 ---
 ## Installation & Setup
@@ -57,9 +57,8 @@ This will launch the interactive web application in your browser.
 ### 2. Run Individual Components (Optional)
 You can test specific functionalities separately:
 ```sh
-python summarizer.py  # Runs the financial summarization module
+python summarizer.py  # Runs the financial summarization module and for benchmarking
 python sentiment_analyzer.py  # Runs the sentiment analysis module
-python benchmarking.py  # Runs financial benchmarking
 python Data_retreival.py  # Extracts key financial metrics
 ```
 
@@ -70,17 +69,15 @@ python Data_retreival.py  # Extracts key financial metrics
 ├── .gitignore                   # Git ignore file
 ├── Data_retreival.py            # Key financial metrics extraction
 ├── app.py                        # Streamlit dashboard main file
-├── app2.py                       # Additional Streamlit module (if needed)
-├── benchmarking.py               # Competitor benchmarking
 ├── sentiment_analyzer.py         # Sentiment analysis
-├── summarizer.py                 # Financial summarization
+├── summarizer.py                 # Financial summarization and benchmarking
 ├── requirements.txt              # Python dependencies
 ├── README.md                     # Documentation
 ```
 
 ---
 ## Future Enhancements
-- **Multi-Period Trend Analysis**: Compare financials over multiple quarters.
+- **Export Feature**: Able to export dashboard as pdf or ppt.
 - **Earnings Call Summarization**: Using speech-to-text AI.
 - **Automated Insights Generation**: Highlight key risks and trends.
 
