@@ -209,161 +209,57 @@ def fetch_financial_metrics(ticker_symbol, years=3):
     return df_melted
 
 
-# ### ---------------- MAIN DATA FETCH FUNCTION ---------------- ###
-def fetch_data(company_name, competitors):
-    """Fetches financial data for the main company and its competitors."""
-    
-    # Fetch main company's ticker and financials as a DataFrame
-    main_ticker = get_ticker_from_search(company_name)
-    main_financials = extract_key_metrics_llm(main_ticker)
-    main_financials['Company'] = company_name  # Add a column with the company name
-
-    # Initialize competitors data as a dictionary of DataFrames
-    competitors_data = []
-    for competitor in competitors:
-        competitor = competitor.strip()  # Clean up competitor name
-        competitor_ticker = get_ticker_from_search(competitor)
-        if competitor_ticker:
-            competitor_financials = fetch_financial_metrics(competitor_ticker)
-            if competitor_financials is not None:
-                competitor_financials['Company'] = competitor  # Add a column with the competitor name
-                competitors_data.append(competitor_financials)
-    
-    # Combine main company's data with competitors' data
-    all_data = pd.concat([main_financials] + competitors_data, ignore_index=True)
-
-    return all_data
-
-# ### ---------------- MAIN DATA FETCH FUNCTION ---------------- ###
-
-# def fetch_data(company_name, competitors):
-#     """Fetches financial data for the main company and its competitors."""
-#     main_ticker = get_ticker_from_search(company_name)
-#     main_financials = fetch_financial_metrics(main_ticker)
-
-#     competitors_data = {}
-#     for competitor in competitors:
-#         competitor_ticker = get_ticker_from_search(competitor)
-#         competitor_financials = fetch_financial_metrics(competitor_ticker)
-#         competitors_data[competitor] = {
-#             "ticker": competitor_ticker,
-#             "financial_metrics": competitor_financials
-#         }
-
-#     return {
-#         "main_company": {
-#             "name": company_name,
-#             "ticker": main_ticker,
-#             "financial_metrics": main_financials
-#         },
-#         "competitors": competitors_data
-#     }
-
-# def main():
-#     # Step 1: Ask for financial report
-#     pdf_path = input("Enter the path to the financial report PDF: ")
-    
-#     # Step 2: Extract text from the PDF
-#     text = extract_text_from_pdf(pdf_path)
-
-#     # Step 3: Extract company name and print it
-#     company_name = extract_company_name_llm(text,api_key=GEMINI_API_KEY)
-#     print("\nExtracted Company Name:", company_name)
-
-#     # Step 4: Extract key metrics from the financial report and print
-#     df_metrics = extract_key_metrics_llm(text)
-#     print("\nExtracted Key Financial Metrics:\n", df_metrics)
-
-#     # Step 5: Ask user for competitor names
-#     competitors = input("\nEnter competitor company names (comma-separated): ").split(",")
-
-#     # Step 6: Fetch ticker symbols and key metrics for competitors
-#     competitor_data = {}
-#     for competitor in competitors:
-#         competitor = competitor.strip()
-#         ticker = get_ticker_from_search(competitor)
-#         if ticker:
-#             competitor_metrics = fetch_financial_metrics(ticker)
-#             competitor_data[competitor] = competitor_metrics
-
-#     # Step 7: Convert competitor data to DataFrame
-#     competitor_df = pd.DataFrame.from_dict(competitor_data, orient="index")
-
-#     # Step 8: Print competitor data
-#     print("\nCompetitor Financial Metrics:\n", competitor_df)
-
-#     # Step 9: Ask for earnings call transcript
-#     transcript_path = input("\nEnter the path to the earnings call transcript PDF: ")
-
-#     # Step 10: Extract text from transcript PDF
-#     transcript_text = extract_text_from_pdf(transcript_path)
-#     print("\nExtracted Earnings Call Transcript (First 500 characters):\n", transcript_text[:500])
-
-# if __name__ == "__main__":
-#     main()
-
 def main():
     # Step 1: Ask for financial report PDF path
     pdf_path = input("Enter the path to the financial report PDF: ")
-    
+
     # Step 2: Extract text from the PDF
     text = extract_text_from_pdf(pdf_path)
 
-    # Step 3: Extract company name and print it
+    # Step 3: Extract company name from the report
     company_name = extract_company_name_llm(text, api_key=GEMINI_API_KEY)
     print("\nExtracted Company Name:", company_name)
 
-    # Step 4: Extract key metrics from the financial report and print
+    # Step 4: Extract key metrics from the financial report
     df_metrics = extract_key_metrics_llm(text)
+    if df_metrics is None:
+        print("Error extracting key financial metrics from the report.")
+        return
+
     print("\nExtracted Key Financial Metrics:\n", df_metrics)
 
-
-    # # Step 6: Ask user for competitor names
-    # competitors = input("\nEnter competitor company names (comma-separated): ").split(",")
-
-    # # Step 7: Fetch ticker symbols and key metrics for competitors
-    # competitor_data = {}
-    # for competitor in competitors:
-    #     competitor = competitor.strip()
-    #     ticker = get_ticker_from_search(competitor)
-    #     if ticker:
-    #         competitor_metrics = fetch_financial_metrics(ticker)
-    #         competitor_data[competitor] = competitor_metrics
-
-    # # Step 8: Convert competitor data to DataFrame
-    # competitor_df = pd.DataFrame.from_dict(competitor_data, orient="index")
-
-    # # Step 9: Print competitor data
-    # print("\nCompetitor Financial Metrics:\n", competitor_df)
-    # Step 6: Ask user for competitor names
+     # Step 5: Ask user for competitor names
     competitors = input("\nEnter competitor company names (comma-separated): ").split(",")
+    competitors = [comp.strip() for comp in competitors]  # Clean up spaces
 
-    # Step 7: Fetch ticker symbols and key metrics for competitors
-    competitor_data = {}
+    # Step 6: Get tickers for each competitor
+    competitor_data = []
     for competitor in competitors:
-        competitor = competitor.strip()
         ticker = get_ticker_from_search(competitor)
         if ticker:
-            competitor_metrics = fetch_financial_metrics(ticker)
-            if competitor_metrics is not None:
-                competitor_data[competitor] = competitor_metrics
+            data = fetch_financial_metrics(ticker)
+            if data is not None:
+                data["Company"] = competitor  # Add company name for identification
+                competitor_data.append(data)
+            else:
+                print(f"Warning: No financial data found for {competitor}.")
+        else:
+            print(f"Warning: Could not find ticker for {competitor}.")
 
-    # Step 8: Concatenate all competitor data into a single DataFrame
-    # We will concatenate along the row axis (axis=0), while keeping track of which competitor the data belongs to
-    competitor_df = pd.concat(competitor_data, axis=0).reset_index()
+    # Step 7: Combine competitor data
+    if competitor_data:
+        competitors_df = pd.concat(competitor_data, ignore_index=True)
+        print("\nCompetitor Financial Data:\n", competitors_df)
+    else:
+        print("\nError: Could not generate competitor comparison table.")
 
-    # Renaming columns to better identify each competitor
-    competitor_df.rename(columns={ "Year": "Year", "Metric": "Metric", "Value": "Value"}, inplace=True)
+    # Step 7: Ask for earnings call transcript (Optional)
+    transcript_path = input("\nEnter the path to the earnings call transcript PDF (or press Enter to skip): ").strip()
 
-    # Step 9: Print competitor data
-    print("\nCompetitor Financial Metrics:\n", competitor_df)
-
-    # Step 10: Ask for earnings call transcript
-    transcript_path = input("\nEnter the path to the earnings call transcript PDF: ")
-
-    # Step 11: Extract text from transcript PDF
-    transcript_text = extract_text_from_pdf(transcript_path)
-    print("\nExtracted Earnings Call Transcript (First 500 characters):\n", transcript_text[:500])
+    if transcript_path:
+        transcript_text = extract_text_from_pdf(transcript_path)
+        print("\nExtracted Earnings Call Transcript (First 500 characters):\n", transcript_text[:500])
 
 if __name__ == "__main__":
     main()
+
